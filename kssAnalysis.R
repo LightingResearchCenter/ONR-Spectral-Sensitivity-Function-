@@ -12,32 +12,32 @@ nighttime_KSS_normalized_time2 <- read_excel("//root/projects/ONR-EEG-BAA16_001/
 nighttime_KSS_normalized_time2_long <- melt(nighttime_KSS_normalized_time2, id.vars = c("Subject_id", "session", "date", "color","condition","group","month"))
 
 
-
+nighttime_KSS_normalized_time2_long2 <- subset(nighttime_KSS_normalized_time2_long, Subject_id != 122)
 #1
-kss <- nighttime_KSS_normalized_time2_long
+kss <- nighttime_KSS_normalized_time2_long2
 analyzeKSS_normDim(kss, FALSE)
 
 #2
-kss <- nighttime_KSS_normalized_time2_long
+kss <- nighttime_KSS_normalized_time2_long2
 analyzeKSS(kss, FALSE)
 
 #3
-red <- subset(nighttime_KSS_normalized_time2_long, color == "red")
+red <- subset(nighttime_KSS_normalized_time2_long2, color == "red")
 analyzeKSS(red, FALSE)
 
 #4
-blue <- subset(nighttime_KSS_normalized_time2_long, color == "blue")
+blue <- subset(nighttime_KSS_normalized_time2_long2, color == "blue")
 analyzeKSS(blue, FALSE)
 
 #5
-green <- subset(nighttime_KSS_normalized_time2_long, color == "green")
+green <- subset(nighttime_KSS_normalized_time2_long2, color == "green")
 analyzeKSS(green, FALSE)
 
 #6
-amber<- subset(nighttime_KSS_normalized_time2_long, color == "amber")
+amber<- subset(nighttime_KSS_normalized_time2_long2, color == "amber")
 analyzeKSS(amber, FALSE)
 
 #7
-cyan <- subset(nighttime_KSS_normalized_time2_long, color == "cyan")
+cyan <- subset(nighttime_KSS_normalized_time2_long2, color == "cyan")
 analyzeKSS(cyan, FALSE)
 
