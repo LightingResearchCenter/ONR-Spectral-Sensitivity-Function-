@@ -1,3 +1,5 @@
+
+```{r }
 source("C:/Users/roohac/Documents/GitHub/ONR-Spectral-Sensitivity-Function-/EEG-LMEM-functions.R")
 library(ggsignif)
 library(readr)
@@ -25,7 +27,6 @@ if(FALSE){
 
 UpdatedEEG_3_11_18 <- read_excel("//root/projects/ONR-EEG-BAA16_001/PROCESSED_DATA/EEG/month5/UpdatedEEG_3_11_18.xlsx")
 
-UpdatedEEG_3_11_18 <- subset(UpdatedEEG_3_11_18, percent_used >= .3 & subject != 158 & sub_session_id != "169_medium" )
 
 
 UpdatedEEG_3_11_18$light_level <- factor(UpdatedEEG_3_11_18$light_level, levels = c("high", "medium", "low", "dim"))
@@ -71,53 +72,11 @@ print("Cyan nighttime: 3min")
 print_mixed_model(model_list8)
 print("Amber nighttime: 3min")
 print_mixed_model(model_list9)
+```
 
 
-
-
-
-####
-###Daytime 
-
-daytime_eeg <- read_excel("//root/projects/EEG-Daytime-ONR-2017/processed-data/month1&2/cropped-longFormatTable_2018_04_11_14_53.xlsx", 
-                          col_types = c("text", "text", "numeric", 
-                                        "text", "text", "numeric", "date", 
-                                        "text", "numeric", "numeric", "numeric", 
-                                        "numeric", "numeric", "numeric"))
-daytime_eeg$TimeOfDay <- "day"
-
-
-daytime_eeg$light_level <- factor(daytime_eeg$light_level, levels = c("h", "m", "l", "d"))
-daytime_eeg$Channel <- factor(daytime_eeg$Channel, levels = c("theta", "atheta", "alpha", "halpha", "beta", "hbeta"))
-daytime_eeg$subject <- as.factor(daytime_eeg$subject)
-daytime_eeg$color <- as.factor(daytime_eeg$color)
-daytime_eeg$Channel <- as.factor(daytime_eeg$Channel)
-daytime_eeg$trial <- as.factor(daytime_eeg$trial)
-
-
-
-
-model_list10 <- output_mixed_model1(daytime_eeg, "day")
-model_list11 <- output_mixed_model2(daytime_eeg, "day")
-
-
-
-print("All data: daytime, specifed to look at light level")
-print_mixed_model(model_list10)
-
-print("All data: daytime, specifed to look at spectra")
-print_mixed_model(model_list11)
-
-
-
-
-##Looking at each indivudual spectra
-model_list12 <- output_mixed_model_single_spectrum(daytime_eeg, "day", "red")
-model_list13 <- output_mixed_model_single_spectrum(daytime_eeg, "day", "blue")
-
-
-print("Red: daytime 3min")
-print_mixed_model(model_list12)
-print("Blue: daytime 3min")
-print_mixed_model(model_list13)
-
+---
+title: "RunLMEM.R"
+author: "roohac"
+date: "Wed Mar 28 15:45:38 2018"
+---

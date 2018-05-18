@@ -3,12 +3,12 @@ library(MuMIn)
 library(nlme)
 output_mixed_model1 <- function(data, time){
   if(time == "both"){
-    theta <- subset(data, Channel == "theta" )
-    atheta <- subset(data, Channel == "atheta" )
-    alpha <- subset(data, Channel == "alpha" )
-    halpha <- subset(data, Channel == "halpha")
-    hbeta <- subset(data, Channel == "hbeta" )
-    beta <- subset(data, Channel == "beta")
+    theta <- subset(data, Channel == "theta" & trial != 1 )
+    atheta <- subset(data, Channel == "atheta" & trial != 1 )
+    alpha <- subset(data, Channel == "alpha" & trial != 1 )
+    halpha <- subset(data, Channel == "halpha" & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta" & trial != 1 )
+    beta <- subset(data, Channel == "beta" & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -32,12 +32,12 @@ output_mixed_model1 <- function(data, time){
     
   }
   if(time == "day"){
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & trial != 1 )
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -62,12 +62,12 @@ output_mixed_model1 <- function(data, time){
   }
   if(time == "night"){
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night"& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -158,6 +158,59 @@ norm_to_Dim <- function(data){
   return(norm_t1_norm_dim)
 }
 
+norm_to_Dim2 <- function(data){
+  
+  #norm_t1alize to dim light
+  
+  library(tidyr)
+  trial2 <- subset(data, trial == 2)
+  trial2$date <- NULL
+  trial2$session <- NULL
+  trial2$Value <- NULL
+  trial2$percent_used <- NULL
+  trial2$sub_trial_id <- NULL
+  trial2$sub_session_id <- NULL
+  trial2$UsedDataCount <- NULL
+  trial2$TotalDataCount <- NULL
+  trial2$`%UsedData` <- NULL
+  trial2$month <- NULL
+  
+  trial2.2 <- spread(trial2, key = c("light_level"), value = "norm_t1")
+  
+  trial2.2$h <- trial2.2$h/trial2.2$d
+  trial2.2$m <- trial2.2$m/trial2.2$d
+  trial2.2$l <- trial2.2$l/trial2.2$d
+  trial2.2$d <- NULL
+  
+  trial2.3 <- melt(trial2.2, id = c("subject", "color", "group","Channel", "TimeOfDay", "trial"))
+  
+  #norm_t1alize to dim light
+  
+  trial3 <- subset(data, trial == 3)
+  trial3$date <- NULL
+  trial3$session <- NULL
+  trial3$Value <- NULL
+  trial3$percent_used <- NULL
+  trial3$sub_trial_id <- NULL
+  trial3$sub_session_id <- NULL
+  trial3$UsedDataCount <- NULL
+  trial3$TotalDataCount <- NULL
+  trial3$`%UsedData` <- NULL
+  trial3$month <- NULL
+  trial3.2 <- spread(trial3, key = c("light_level"), value = "norm_t1")
+  
+  trial3.2$h <- trial3.2$h/trial3.2$d
+  trial3.2$m <- trial3.2$m/trial3.2$d
+  trial3.2$l <- trial3.2$l/trial3.2$d
+  trial3.2$d <- NULL
+  
+  trial3.3 <- melt(trial3.2, id = c("subject", "color", "group","Channel", "TimeOfDay", "trial"))
+  
+  norm_t1_norm_t1_dim <- rbind(trial2.3, trial3.3)
+  colnames(norm_t1_norm_t1_dim)[7] <- "light_level"
+  colnames(norm_t1_norm_t1_dim)[8] <- "norm_t1"
+  return(norm_t1_norm_t1_dim)
+}
 output_mixed_model2 <- function(data, time){
   if(time == "both"){
     data <- norm_to_Dim(data)
@@ -195,12 +248,12 @@ output_mixed_model2 <- function(data, time){
     data <- norm_to_Dim(data)
     data$norm_t1 <- as.numeric(data$norm_t1 )
     data <- subset(data, !is.na(norm_t1) & is.finite(norm_t1))
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & trial != 1 )
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -228,12 +281,12 @@ output_mixed_model2 <- function(data, time){
     data$norm_t1 <- as.numeric(data$norm_t1 )
     data <- subset(data, !is.na(norm_t1) & is.finite(norm_t1))
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night"  & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night" & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night" & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night" & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -307,12 +360,12 @@ output_mixed_model_single_spectrum <- function(data, time, spectrum){
     
   }
   if(time == "day"){
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & color == spectrum)
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & color == spectrum )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & color == spectrum)
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & color == spectrum)
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & color == spectrum)
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & color == spectrum)
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & color == spectrum & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & color == spectrum & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & color == spectrum & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & color == spectrum & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & color == spectrum & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & color == spectrum & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -337,12 +390,12 @@ output_mixed_model_single_spectrum <- function(data, time, spectrum){
   }
   if(time == "night"){
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & color == spectrum)
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & color == spectrum )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & color == spectrum)
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night" & color == spectrum)
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night" & color == spectrum)
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night" & color == spectrum)
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & color == spectrum & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & color == spectrum & trial != 1 )
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & color == spectrum & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night" & color == spectrum & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night" & color == spectrum & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night" & color == spectrum & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -413,12 +466,12 @@ print_mixed_model <- function(model_list){
 
 output_mixed_model3 <- function(data, time){
   if(time == "both"){
-    theta <- subset(data, Channel == "theta" )
-    atheta <- subset(data, Channel == "atheta" )
-    alpha <- subset(data, Channel == "alpha" )
-    halpha <- subset(data, Channel == "halpha")
-    hbeta <- subset(data, Channel == "hbeta" )
-    beta <- subset(data, Channel == "beta")
+    theta <- subset(data, Channel == "theta" & trial != 1 )
+    atheta <- subset(data, Channel == "atheta" & trial != 1)
+    alpha <- subset(data, Channel == "alpha" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta" & trial != 1)
+    beta <- subset(data, Channel == "beta"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -442,12 +495,12 @@ output_mixed_model3 <- function(data, time){
     
   }
   if(time == "day"){
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day"& trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day"& trial != 1 )
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day"& trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day"& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -472,12 +525,12 @@ output_mixed_model3 <- function(data, time){
   }
   if(time == "night"){
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night"& trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night"& trial != 1 )
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night"& trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night"& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -523,12 +576,12 @@ output_mixed_model4 <- function(data, time){
     data <- norm_to_Dim(data)
     data$norm_t1 <- as.numeric(data$norm_t1 )
     data <- subset(data, !is.na(norm_t1) & is.finite(norm_t1))
-    theta <- subset(data, Channel == "theta" )
-    atheta <- subset(data, Channel == "atheta" )
-    alpha <- subset(data, Channel == "alpha" )
-    halpha <- subset(data, Channel == "halpha")
-    hbeta <- subset(data, Channel == "hbeta" )
-    beta <- subset(data, Channel == "beta")
+    theta <- subset(data, Channel == "theta" & trial != 1)
+    atheta <- subset(data, Channel == "atheta" & trial != 1)
+    alpha <- subset(data, Channel == "alpha" & trial != 1)
+    halpha <- subset(data, Channel == "halpha"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta" & trial != 1)
+    beta <- subset(data, Channel == "beta"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -552,15 +605,15 @@ output_mixed_model4 <- function(data, time){
     
   }
   if(time == "day"){
-    data <- norm_to_Dim(data)
+    data <- norm_to_Dim2(data)
     data$norm_t1 <- as.numeric(data$norm_t1 )
     data <- subset(data, !is.na(norm_t1) & is.finite(norm_t1))
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day"& trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day"& trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day"& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -588,12 +641,12 @@ output_mixed_model4 <- function(data, time){
     data$norm_t1 <- as.numeric(data$norm_t1 )
     data <- subset(data, !is.na(norm_t1) & is.finite(norm_t1))
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night")
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night")
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night")
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night")
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night")
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night"& trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night"& trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night"& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night"& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night"& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -638,12 +691,12 @@ output_mixed_model4 <- function(data, time){
 
 output_mixed_model_single_spectrum2 <- function(data, time, spectrum){
   if(time == "both"){
-    theta <- subset(data, Channel == "theta" & color == spectrum)
-    atheta <- subset(data, Channel == "atheta" & color == spectrum )
-    alpha <- subset(data, Channel == "alpha" & color == spectrum)
-    halpha <- subset(data, Channel == "halpha"& color == spectrum)
-    hbeta <- subset(data, Channel == "hbeta" & color == spectrum)
-    beta <- subset(data, Channel == "beta"& color == spectrum)
+    theta <- subset(data, Channel == "theta" & color == spectrum& trial != 1)
+    atheta <- subset(data, Channel == "atheta" & color == spectrum& trial != 1 )
+    alpha <- subset(data, Channel == "alpha" & color == spectrum& trial != 1)
+    halpha <- subset(data, Channel == "halpha"& color == spectrum& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta" & color == spectrum& trial != 1)
+    beta <- subset(data, Channel == "beta"& color == spectrum& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -667,12 +720,12 @@ output_mixed_model_single_spectrum2 <- function(data, time, spectrum){
     
   }
   if(time == "day"){
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & color == spectrum)
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & color == spectrum )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & color == spectrum)
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & color == spectrum)
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & color == spectrum)
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & color == spectrum)
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "day" & color == spectrum& trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "day" & color == spectrum & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "day" & color == spectrum& trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "day" & color == spectrum& trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "day" & color == spectrum& trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "day" & color == spectrum& trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
@@ -697,12 +750,12 @@ output_mixed_model_single_spectrum2 <- function(data, time, spectrum){
   }
   if(time == "night"){
     print("All data: nighttime")
-    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & color == spectrum)
-    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & color == spectrum )
-    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & color == spectrum)
-    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night" & color == spectrum)
-    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night" & color == spectrum)
-    beta <- subset(data, Channel == "beta" & TimeOfDay == "night" & color == spectrum)
+    theta <- subset(data, Channel == "theta" & TimeOfDay == "night" & color == spectrum & trial != 1)
+    atheta <- subset(data, Channel == "atheta"  & TimeOfDay == "night" & color == spectrum & trial != 1)
+    alpha <- subset(data, Channel == "alpha"   & TimeOfDay == "night" & color == spectrum & trial != 1)
+    halpha <- subset(data, Channel == "halpha"  & TimeOfDay == "night" & color == spectrum & trial != 1)
+    hbeta <- subset(data, Channel == "hbeta"  & TimeOfDay == "night" & color == spectrum & trial != 1)
+    beta <- subset(data, Channel == "beta" & TimeOfDay == "night" & color == spectrum & trial != 1)
     
     
     ctrl <- lmeControl(opt='optim')
