@@ -2,24 +2,14 @@ library(Rmisc)
 library(readr)
 library(ggplot2)
 library(lsmeans)
-library(nlme)
-library(MuMIn)
-library(tidyr)
 library(reshape2)
-library(Rmisc)
-library(readr)
-library(ggplot2)
 library(nlme)
-library(lsmeans)
 library(ggsignif)
 library(readxl)
 library(lme4)
 library(MuMIn)
 library(tidyr)
-library(reshape2)
 library(data.table)
-library(ReporteRs)
-library(magrittr)
 library(WordR)
 library(magrittr)
 library(ReporteRs)
@@ -37,8 +27,9 @@ options("ReporteRs-fontsize"=10)
 analyzeGNG <- function(data_performance, post_hoc, color, normDim){
   doc = docx()
   
-  if(normDim){
+  if(normDim == "multipleNorm"){
     baseCellProp = cellProperties( padding = 0 )
+    doc <- addTitle( doc,normDim, level = 1 )
     
     
     colnames(data_performance)[15] <- "light_level"
@@ -284,7 +275,10 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     
     print_output(output_list)
     
-  }else{
+  }
+  
+  
+  if(normDim == "single"){
     baseCellProp = cellProperties( padding = 0 )
     
     
@@ -458,6 +452,188 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
   }
   
  
+  if(normDim == "multiple"){
+    baseCellProp = cellProperties( padding = 0 )
+    doc <- addTitle( doc,normDim, level = 1 )
+    
+    
+    ctrl <- lmeControl(opt='optim');
+    
+    text1 <- "R-squared ----------"
+    text2 <- "P-values ----------"
+    text3 <- "Pairwise comparisons :light level------"
+    text4 <- "Pairwise comparisons :block------"
+    text5 <- "Pairwise comparisons : interaction (light level | block) ------"
+    
+    colnames(data_performance)[15] <- "light_level"
+    data_performance$light_level <- ifelse(data_performance$light_level =="dark", "dim", data_performance$light_level )
+    
+    
+    
+    data_performance$Subject_id <- as.factor(data_performance$Subject_id)
+    data_performance$light_level <- as.factor(data_performance$light_level)
+    data_performance$color <- as.factor(data_performance$color)
+    data_performance$block <- as.factor(data_performance$block)
+    
+    
+    go_only <- subset(data_performance, display == "go")
+    no_only <- subset(data_performance, display == "no_go")
+    
+    
+    ###False postive rate
+    print("False postive rate in progress")
+    
+    
+    fp_text <- "----------False postive----------"
+    
+    subject_fp_means <- aggregate(false_positive ~  Subject_id + color + light_level + block, data = no_only, FUN = mean)
+    
+    
+    fp_model <- lme(false_positive ~ light_level*block*color , random = ~1|Subject_id/light_level/block,
+                    data=subject_fp_means)
+    
+    fp_model_r2 <- r.squaredGLMM(fp_model)
+    
+    fp_model_pVal <- anova(fp_model)
+    
+    df1 <-  setDT(fp_model_pVal, keep.rownames = TRUE)[]
+    
+    df1 <- df1[-1,]  
+    colnames(df1)[4] <- "F"   
+    colnames(df1)[5] <- "p"      
+    df1$p <-  ifelse(!is.na(df1$p), substr(as.character(sprintf("%.3f", round(df1$p, digits = 3))), 2, 5), df1$p) 
+    df1$F <-  ifelse(!is.na(df1$F), as.character(round(df1$F, digits = 3)), df1$F)
+    
+    MyFTable = vanilla.table( data = df1 )
+    
+    MyFTable[as.numeric(df1$p) < .05, 5] = chprop( baseCellProp, background.color = "green")
+    
+    doc <- addTitle( doc, paste("Fp - between light level", color), level = 1 )
+    
+    doc = addFlexTable(doc, MyFTable)
+    
+    
+    if(post_hoc == TRUE){
+      fp_model_postHoc1 <- lsmeans(fp_model, pairwise~color, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc2 <- lsmeans(fp_model, pairwise~light_level, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc3 <- lsmeans(fp_model, pairwise~block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc4 <- lsmeans(fp_model, pairwise~color|block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc5 <- lsmeans(fp_model, pairwise~light_level|block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc6 <- lsmeans(fp_model, pairwise~light_level|color, adjust="bonferroni", data = subject_fp_means)
+      
+      
+      output_list3 <- list(rt_text, text1, rt_model_r2, text2,  rt_model_pVal, text3, rt_model_postHoc1, text4, rt_model_postHoc2)
+    }else{
+      output_list1 <- list(fp_text, text1, fp_model_r2, text2,  fp_model_pVal)
+      
+    }
+    ###Miss rate
+    print("Miss rate in progress")
+    
+    miss_text <- "----------Miss rate----------"
+    
+    
+    subject_miss_means <- aggregate(miss ~  Subject_id + color + light_level + block , data = go_only, FUN = mean)
+    
+    subject_miss_means2 <- subject_miss_means
+    
+    
+    
+    miss_model <- lme(miss ~ light_level*block*color , random = ~1|Subject_id/light_level/block,
+                      data=subject_miss_means2)
+    
+    miss_model_r2 <- r.squaredGLMM(miss_model)
+    
+    miss_model_pVal <- anova(miss_model)
+    
+    df1 <-  setDT(miss_model_pVal, keep.rownames = TRUE)[]
+    
+    df1 <- df1[-1,]    
+    colnames(df1)[4] <- "F"  
+    colnames(df1)[5] <- "p"      
+    df1$p <-  ifelse(!is.na(df1$p), substr(as.character(sprintf("%.3f", round(df1$p, digits = 3))), 2, 5), df1$p)
+    df1$F <-  ifelse(!is.na(df1$F), as.character(round(df1$F, digits = 3)), df1$F)
+    
+    MyFTable = vanilla.table( data = df1 )
+    
+    MyFTable[as.numeric(df1$p) < .05, 5] = chprop( baseCellProp, background.color = "green")
+    
+    doc <- addTitle( doc, paste("Miss - between light level", color), level = 1 )
+    
+    doc = addFlexTable(doc, MyFTable)
+    
+    
+    if(post_hoc == TRUE){
+      
+      fp_model_postHoc1 <- lsmeans(fp_model, pairwise~color, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc2 <- lsmeans(fp_model, pairwise~light_level, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc3 <- lsmeans(fp_model, pairwise~block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc4 <- lsmeans(fp_model, pairwise~color|block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc5 <- lsmeans(fp_model, pairwise~light_level|block, adjust="bonferroni", data = subject_fp_means)
+      fp_model_postHoc6 <- lsmeans(fp_model, pairwise~light_level|color, adjust="bonferroni", data = subject_fp_means)
+      
+      output_list2 <- list(miss_text, text1, miss_model_r2, text2,  miss_model_pVal, text3,  miss_model_postHoc1, text4,  miss_model_postHoc2, text5,  miss_model_postHoc3)
+    }else{
+      output_list2 <- list(miss_text, text1, miss_model_r2, text2,  miss_model_pVal)
+      
+    }
+    
+    
+    #Response time
+    print("Response time in progress")
+    
+    rt_text <- "----------Response time----------"
+    
+    
+    rt <- subset(data_performance, response_time >= .1 & display == "go" )
+    
+    
+    rt_model <- lme(response_time ~ light_level*block*color , random = ~1|Subject_id/light_level/block,control=ctrl, 
+                    data=rt)
+    
+    rt_model_r2 <- r.squaredGLMM(rt_model)
+    
+    rt_model_pVal <- anova(rt_model)
+    
+    df1 <-  setDT(rt_model_pVal, keep.rownames = TRUE)[]
+    
+    df1 <- df1[-1,]     
+    colnames(df1)[4] <- "F"   
+    colnames(df1)[5] <- "p"      
+    df1$p <-  ifelse(!is.na(df1$p), substr(as.character(sprintf("%.3f", round(df1$p, digits = 3))), 2, 5), df1$p)  
+    df1$F <-  ifelse(!is.na(df1$F), as.character(round(df1$F, digits = 3)), df1$F)
+    
+    MyFTable = vanilla.table( data = df1 )
+    
+    MyFTable[as.numeric(df1$p) < .05, 5] = chprop( baseCellProp, background.color = "green")
+    
+    doc <- addTitle( doc, paste("RT - between light level - ", color), level = 1 )
+    
+    doc = addFlexTable(doc, MyFTable)
+    
+    
+    
+    if(post_hoc == TRUE){
+      rt_model_postHoc1 <- lsmeans(rt_model, pairwise~light_level, adjust="bonferroni", data = rt)
+      rt_model_postHoc2 <- lsmeans(rt_model, pairwise~block, adjust="bonferroni", data = rt)
+      rt_model_postHoc3 <- lsmeans(rt_model, pairwise~light_level|block, adjust="bonferroni", data = rt)  
+      
+      output_list3 <- list(rt_text, text1, rt_model_r2, text2, rt_model_pVal, text3, rt_model_postHoc1, text4, rt_model_postHoc2, text5, rt_model_postHoc3)
+      
+    }else{
+      output_list3 <- list(rt_text, text1, rt_model_r2, text2, rt_model_pVal)
+      
+    }
+    
+    
+    
+    output_list <- list(output_list1, output_list2, output_list3)
+    
+    print_output(output_list)
+  }
+  
+  
+  
   dir <- "//root/projects/ONR-EEG-BAA16_001/REPORTS/STATS-OUTPUT/"
   filename <- paste("ONR-GNG-", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".docx", sep = "_")
   

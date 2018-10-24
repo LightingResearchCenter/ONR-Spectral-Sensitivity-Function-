@@ -21,6 +21,10 @@ performance2 <- subset(performance, Subject_id != "s132" & sub_cond != "s129_hig
 performance3 <- subset(performance2, block != 4)
 performance4 <- subset(performance1, block != 4)
 
+
+GNG_eegISIremoved <- read_csv("//root/projects/ONR-EEG-BAA16_001/PROCESSED_DATA/PERFORMANCE/GNG_eegISIremoved_7_18_18.csv")
+
+
 if(FALSE){
   performance <- read_csv("//root/projects/EEG-Daytime-ONR-2017/Raw-data/GNG_data/processedData/GNG_Day-4-25-18.csv")
   
@@ -38,46 +42,49 @@ if(FALSE){
 
 runNight <- function(data00){
   
+  # "multipleNorm" "single" "multiple"
+  # analyzeGNG(data_performance, post_hoc, color, normDim){
+
   #1
   all_spectra_lightLevels <- data00
   print("All data: between spectra")
-  analyzeGNG(all_spectra_lightLevels, TRUE, "all", TRUE)
+  analyzeGNG(all_spectra_lightLevels, TRUE, "all", "multipleNorm")
   
   #2
   all_spectra_lightLevels <- data00
   print("All data: between light level")
-  analyzeGNG(all_spectra_lightLevels, TRUE, "all", FALSE)
+  analyzeGNG(all_spectra_lightLevels, FALSE, "all", "multiple")
   
   #3
   red <- subset(data00, color == "red")
   print("Red")
-  analyzeGNG(red, TRUE, "red", FALSE)
+  analyzeGNG(red, FALSE, "red", "single")
   
   #4
   blue <- subset(data00, color == "blue")
   print("Blue")
-  analyzeGNG(blue, TRUE, "blue", FALSE)
+  analyzeGNG(blue, FALSE, "blue", "single")
   
   #5
   green <- subset(data00, color == "green")
   print("Green")
-  analyzeGNG(green, TRUE, "green", FALSE)
+  analyzeGNG(green, FALSE, "green", "single")
   
   #6
   amber <- subset(data00, color == "amber")
   print("Amber")
-  analyzeGNG(amber, TRUE, "amber", FALSE)
+  analyzeGNG(amber, FALSE, "amber", "single")
   
   #7
   cyan <- subset(data00, color == "cyan")
   print("Cyan")
-  analyzeGNG(cyan, TRUE, "cyan", FALSE)
+  analyzeGNG(cyan, FALSE, "cyan", FALSE)
   
 
   
   
 }
-runNight(performance1)
+runNight(GNG_eegISIremoved)
 
 
 #

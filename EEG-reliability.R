@@ -5,42 +5,54 @@ library(plotly)
 library(dplyr)
 library(readxl)
 
-month5_EEG_data <- read_excel("//root/projects/ONR-EEG-BAA16_001/PROCESSED_DATA/EEG/month5/longFormatTable_month5_USE-THIS.xlsx")
+UpdatedEEG_5_10_18<- read_excel("//root/projects/ONR-EEG-BAA16_001/PROCESSED_DATA/EEG/total-months/180sec_threshold_100/longFormatTableNorm1NormD_2018_05_10_16_34.xlsx")
 
-month5_EEG_data$norm_t1 <- as.numeric(month5_EEG_data$norm_t1 )
-colnames(month5_EEG_data)[5] <- "light_level"
+UpdatedEEG_5_10_18$ValueNorm1 <- as.numeric(UpdatedEEG_5_10_18$ValueNorm1 )
+colnames(UpdatedEEG_5_10_18)[6] <- "light_level"
 
-month5_EEG_data$light_level <- ifelse(month5_EEG_data$light_level =="d", "dim", ifelse(month5_EEG_data$light_level =="m", "medium", ifelse(month5_EEG_data$light_level =="l", "low","high" )) )
+UpdatedEEG_5_10_18$light_level <- ifelse(UpdatedEEG_5_10_18$light_level =="d", "dim", ifelse(UpdatedEEG_5_10_18$light_level =="m", "medium", ifelse(UpdatedEEG_5_10_18$light_level =="l", "low","high" )) )
 
 
-month5_EEG_data$color <- as.factor(month5_EEG_data$color)
+UpdatedEEG_5_10_18$color <- as.factor(UpdatedEEG_5_10_18$color)
 
 ###################################################################################
 ###Testing the reliabilty of data
 
+UpdatedEEG_5_10_18 <- subset(UpdatedEEG_5_10_18, subject != 102 & subject != 108 & subject != 125 & subject != 136 
+                                     & subject != 137 & subject != 111 & subject != 115 & subject != 118 & subject != 126 
+                                     & subject != 122 & subject != 117 & subject != 140 & subject != 142 & subject != 170
+                                     & subject != 171 & subject != 174 & subject != 162 & subject != 168)
 
-month5_EEG_data$percent_used <- month5_EEG_data$UsedDataCount/month5_EEG_data$TotalDataCount
-
-colnames(month5_EEG_data)[12] <- "percent_used"
 
 
-month5_EEG_data2 <- month5_EEG_data
-sum_data_percent <- aggregate(percent_used ~ subject + color + session + light_level + trial + session + date  , data = month5_EEG_data2, FUN = mean)
+UpdatedEEG_5_10_182 <- subset(UpdatedEEG_5_10_18, !is.na(ValueNorm1))
+sum_data_percent <- aggregate(percent_used ~ subject + color + session + light_level + trial + session + date  , data = UpdatedEEG_5_10_18, FUN = mean)
 
 sum_data_percent <- sum_data_percent %>% 
   group_by(subject) %>% 
   mutate(sub_percent_mean = mean(percent_used))
 
+sum_data_percent <- sum_data_percent %>% 
+  group_by(subject) %>% 
+  mutate(sub_percent_2sdmean = mean(percent_used)-(sd(percent_used)*2))
+sum_data_percent$outlier <-ifelse(sum_data_percent$percent_used < sum_data_percent$sub_percent_2sdmean, TRUE, FALSE)
+
+sum_data_percent <- sum_data_percent %>% 
+  group_by(subject) %>% 
+  mutate(sub_percent_30mean = mean(percent_used)*.3)
+
+
+sum_data_percent$outlier2 <-ifelse(sum_data_percent$percent_used < sum_data_percent$sub_percent_30mean, TRUE, FALSE)
 
 sum_data_percent$light_level <- factor(sum_data_percent$light_level, levels = c("high", "medium", "low", "dim"))
-sum_data_percent_cyan <- subset(sum_data_percent, color == "cyan")
-sum_data_percent_amber <- subset(sum_data_percent, color == "amber")
+sum_data_percent_cyan <- subset(sum_data_percent, color == "c")
+sum_data_percent_amber <- subset(sum_data_percent, color == "a")
 
 
 
-sum_data_percent4 <- subset(sum_data_percent, percent_used >= 30)
-sum_data_percent_cyan3 <- subset(sum_data_percent4, color == "cyan")
-sum_data_percent_amber3 <- subset(sum_data_percent4, color == "amber")
+sum_data_percent4 <- subset(sum_data_percent, percent_used >= .30)
+sum_data_percent_cyan3 <- subset(sum_data_percent4, color == "c")
+sum_data_percent_amber3 <- subset(sum_data_percent4, color == "a")
 
 sum_data_percent4$sub_char <- paste(sum_data_percent4$subject, sum_data_percent4$light_level, sep = "_")
 missing_after_filter <-  data.frame(table(sum_data_percent4$sub_char))
@@ -56,11 +68,11 @@ sub_data_percent_amber <- aggregate(percent_used ~ subject, data = sum_data_perc
 gg <- ggplot(sum_data_percent_cyan, aes(x =trial, y= percent_used, fill = light_level, colour = light_level))+
   geom_point() +
   geom_line() +
-  geom_hline(yintercept = 30) + 
+  geom_hline(yintercept = .30) + 
   #geom_hline(yintercept = cyan_outllier_limit) + 
   facet_grid(. ~ subject)+
   theme(legend.position="none") +
-  coord_cartesian(ylim=c(0, 100)) +
+  coord_cartesian(ylim=c(0, 1)) +
   scale_colour_manual(values=c("cyan1", "cyan2", "cyan4", "#999999"))+
   labs(y = "Percentage of unfilted data (%)")
 
@@ -69,11 +81,11 @@ ggsave("//root/projects/ONR-EEG-BAA16_001/REPORTS/GRAPHS/cyanReliability.png", d
 gg1 <- ggplot(sum_data_percent_amber, aes(x =trial, y= percent_used, fill = light_level, colour = light_level))+
   geom_point() +
   geom_line() +
-  geom_hline(yintercept = 30) + 
+  geom_hline(yintercept = .30) + 
   #geom_hline(yintercept = amber_outllier_limit) + 
   facet_grid(. ~ subject)+
   theme(legend.position="none") +
-  coord_cartesian(ylim=c(0, 100)) +
+  coord_cartesian(ylim=c(0, 1)) +
   scale_colour_manual(values=c("brown1", "brown4", "red2", "#999999")) +
   labs(y = "Percentage of unfilted data (%)")
 
@@ -86,20 +98,20 @@ ggsave("//root/projects/ONR-EEG-BAA16_001/REPORTS/GRAPHS/amberReliability.png", 
 gg5 <- ggplot(sum_data_percent_cyan3, aes(x =trial, y= percent_used, fill = light_level, colour = light_level))+
   geom_point() +
   geom_line() +
-  geom_hline(yintercept = 30) + 
+  geom_hline(yintercept = .30) + 
   geom_hline(yintercept = cyan_outllier_limit) + 
   facet_grid(. ~ subject)+
-  coord_cartesian(ylim=c(0, 100)) +
+  coord_cartesian(ylim=c(0, 1)) +
   theme(legend.position="bottom") +
   scale_colour_manual(values=c("cyan1", "cyan2", "cyan4", "#999999")) 
 
 gg6 <- ggplot(sum_data_percent_amber3, aes(x =trial, y= percent_used, fill = light_level, colour = light_level))+
   geom_point() +
   geom_line() +
-  geom_hline(yintercept = 30) + 
+  geom_hline(yintercept = .30) + 
   geom_hline(yintercept = amber_outllier_limit) + 
   facet_grid(. ~ subject)+
-  coord_cartesian(ylim=c(0, 100)) +
+  coord_cartesian(ylim=c(0, 1)) +
   theme(legend.position="bottom") +
   scale_colour_manual(values=c("brown1", "brown4", "red2", "#999999")) 
 
@@ -118,7 +130,7 @@ multiplot(gg, gg5, gg1, gg6, cols=2)
 
 
 
-norm_raw <- subset(month5_EEG_data, trial != 1 & !is.na(Value))
+norm_raw <- subset(UpdatedEEG_5_10_18, trial != 1 & !is.na(Value))
 
 
 norm_raw$light_level <- factor(norm_raw$light_level, levels = c("high", "medium", "low", "dim"))

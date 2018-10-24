@@ -15,15 +15,15 @@ nighttime_KSS_normalized_time2_long <- melt(nighttime_KSS_normalized_time2, id.v
 nighttime_KSS_normalized_time2_long2 <- subset(nighttime_KSS_normalized_time2_long, Subject_id != 122)
 #1
 kss <- nighttime_KSS_normalized_time2_long2
-analyzeKSS_normDim(kss, FALSE)
+analyzeKSS_normDim(kss, TRUE)
 
 #2
 kss <- nighttime_KSS_normalized_time2_long2
-analyzeKSS(kss, FALSE)
+analyzeKSS(kss, TRUE)
 
 #3
 red <- subset(nighttime_KSS_normalized_time2_long2, color == "red")
-analyzeKSS(red, FALSE)
+analyzeKSS(red, TRUE)
 
 #4
 blue <- subset(nighttime_KSS_normalized_time2_long2, color == "blue")
