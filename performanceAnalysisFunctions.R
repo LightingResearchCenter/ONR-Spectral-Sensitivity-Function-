@@ -24,8 +24,8 @@ print_output <- function(output_list){
 }
 options("ReporteRs-fontsize"=10)
 
-analyzeGNG <- function(data_performance, post_hoc, color, normDim){
-  doc = docx()
+analyzeGNG <- function(data_performance, post_hoc, color, normDim, doc){
+  ctrl <- lmeControl(opt='optim');
   
   if(normDim == "multipleNorm"){
     baseCellProp = cellProperties( padding = 0 )
@@ -56,9 +56,10 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     subject_fp_means <- aggregate(false_positive ~  Subject_id + light_level + block + color, data = no_only, FUN = mean)
     
     subject_fp_means2 <- spread(subject_fp_means, light_level,  false_positive)
-    subject_fp_means2$high <- subject_fp_means2$high/subject_fp_means2$dim 
-    subject_fp_means2$medium <- subject_fp_means2$medium/subject_fp_means2$dim
-    subject_fp_means2$low <- subject_fp_means2$low/subject_fp_means2$dim
+    subject_fp_means2$L4 <- subject_fp_means2$L4/subject_fp_means2$dim 
+    subject_fp_means2$L3 <- subject_fp_means2$L3/subject_fp_means2$dim
+    subject_fp_means2$L1 <- subject_fp_means2$L1/subject_fp_means2$dim
+    #subject_fp_means2$fifteen <- subject_fp_means2$fifteen/subject_fp_means2$dim
     subject_fp_means2$dim <- NULL
     subject_fp_means3 <- melt(subject_fp_means2, id = c("Subject_id", "block", "color"))
     colnames(subject_fp_means3)[4] <- "light_level"
@@ -66,8 +67,8 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     subject_fp_means4 <- subset(subject_fp_means3, !is.na(false_positive) & !is.infinite(false_positive))
     
     
-    fp_model <- lme(false_positive ~ color*light_level*block , random = ~1|Subject_id/light_level/block,
-                    data=subject_fp_means4)
+    fp_model <- lme(false_positive ~ color*light_level*block , random = ~1|Subject_id,
+                    data=subject_fp_means4, control = ctrl)
     
     
     
@@ -125,9 +126,9 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     subject_miss_means <- aggregate(miss ~  Subject_id + color +light_level + block , data = go_only, FUN = mean)
     
     subject_miss_means2 <- spread(subject_miss_means, light_level,  miss)
-    subject_miss_means2$high <- subject_miss_means2$high/subject_miss_means2$dim 
-    subject_miss_means2$medium <- subject_miss_means2$medium/subject_miss_means2$dim
-    subject_miss_means2$low <- subject_miss_means2$low/subject_miss_means2$dim
+    subject_miss_means2$L4 <- subject_miss_means2$L4/subject_miss_means2$dim 
+    subject_miss_means2$L3 <- subject_miss_means2$L3/subject_miss_means2$dim
+    subject_miss_means2$L1 <- subject_miss_means2$L1/subject_miss_means2$dim
     subject_miss_means2$dim <- NULL
     subject_miss_means3 <- melt(subject_miss_means2, id = c("Subject_id", "block", "color"))
     colnames(subject_miss_means3)[4] <- "light_level"
@@ -201,9 +202,9 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     subject_rt_means <- aggregate(response_time ~  Subject_id + color +light_level + block , data = rt, FUN = mean)
     
     subject_rt_means2 <- spread(subject_rt_means, light_level,  response_time)
-    subject_rt_means2$high <- subject_rt_means2$high/subject_rt_means2$dim 
-    subject_rt_means2$medium <- subject_rt_means2$medium/subject_rt_means2$dim
-    subject_rt_means2$low <- subject_rt_means2$low/subject_rt_means2$dim
+    subject_rt_means2$L4 <- subject_rt_means2$L4/subject_rt_means2$dim 
+    subject_rt_means2$L3 <- subject_rt_means2$L3/subject_rt_means2$dim
+    subject_rt_means2$L1 <- subject_rt_means2$L1/subject_rt_means2$dim
     subject_rt_means2$dim <- NULL
     subject_rt_means3 <- melt(subject_rt_means2, id = c("Subject_id", "block", "color"))
     colnames(subject_rt_means3)[4] <- "light_level"
@@ -315,7 +316,7 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
     
     
     fp_model <- lme(false_positive ~ light_level*block , random = ~1|Subject_id/light_level/block,
-                    data=subject_fp_means)
+                    data=subject_fp_means, control = ctrl)
     
     fp_model_r2 <- r.squaredGLMM(fp_model)
     
@@ -634,10 +635,7 @@ analyzeGNG <- function(data_performance, post_hoc, color, normDim){
   
   
   
-  dir <- "//root/projects/ONR-EEG-BAA16_001/REPORTS/STATS-OUTPUT/"
-  filename <- paste("ONR-GNG-", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".docx", sep = "_")
-  
-  writeDoc( doc, file = paste(dir, filename, sep = "") )
+return(doc)
 }
   
 analyzeGNG_normDim <- function(data_performance, post_hoc){
@@ -668,9 +666,9 @@ analyzeGNG_normDim <- function(data_performance, post_hoc){
   subject_fp_means <- aggregate(false_positive ~  Subject_id + light_level + block + color, data = no_only, FUN = mean)
   
   subject_fp_means2 <- spread(subject_fp_means, light_level,  false_positive)
-  subject_fp_means2$high <- subject_fp_means2$high/subject_fp_means2$dim 
-  subject_fp_means2$medium <- subject_fp_means2$medium/subject_fp_means2$dim
-  subject_fp_means2$low <- subject_fp_means2$low/subject_fp_means2$dim
+  subject_fp_means2$L4 <- subject_fp_means2$L4/subject_fp_means2$dim 
+  subject_fp_means2$L3 <- subject_fp_means2$L3/subject_fp_means2$dim
+  subject_fp_means2$L1 <- subject_fp_means2$L1/subject_fp_means2$dim
   subject_fp_means2$dim <- NULL
   subject_fp_means3 <- melt(subject_fp_means2, id = c("Subject_id", "block", "color"))
   colnames(subject_fp_means3)[4] <- "light_level"
@@ -737,9 +735,9 @@ analyzeGNG_normDim <- function(data_performance, post_hoc){
   subject_miss_means <- aggregate(miss ~  Subject_id + color +light_level + block , data = go_only, FUN = mean)
   
   subject_miss_means2 <- spread(subject_miss_means, light_level,  miss)
-  subject_miss_means2$high <- subject_miss_means2$high/subject_miss_means2$dim 
-  subject_miss_means2$medium <- subject_miss_means2$medium/subject_miss_means2$dim
-  subject_miss_means2$low <- subject_miss_means2$low/subject_miss_means2$dim
+  subject_miss_means2$L4 <- subject_miss_means2$L4/subject_miss_means2$dim 
+  subject_miss_means2$L3 <- subject_miss_means2$L3/subject_miss_means2$dim
+  subject_miss_means2$L1 <- subject_miss_means2$L1/subject_miss_means2$dim
   subject_miss_means2$dim <- NULL
   subject_miss_means3 <- melt(subject_miss_means2, id = c("Subject_id", "block", "color"))
   colnames(subject_miss_means3)[4] <- "light_level"
@@ -813,9 +811,9 @@ analyzeGNG_normDim <- function(data_performance, post_hoc){
   subject_rt_means <- aggregate(response_time ~  Subject_id + color +light_level + block , data = rt, FUN = mean)
   
   subject_rt_means2 <- spread(subject_rt_means, light_level,  response_time)
-  subject_rt_means2$high <- subject_rt_means2$high/subject_rt_means2$dim 
-  subject_rt_means2$medium <- subject_rt_means2$medium/subject_rt_means2$dim
-  subject_rt_means2$low <- subject_rt_means2$low/subject_rt_means2$dim
+  subject_rt_means2$L4 <- subject_rt_means2$L4/subject_rt_means2$dim 
+  subject_rt_means2$L3 <- subject_rt_means2$L3/subject_rt_means2$dim
+  subject_rt_means2$L1 <- subject_rt_means2$L1/subject_rt_means2$dim
   subject_rt_means2$dim <- NULL
   subject_rt_means3 <- melt(subject_rt_means2, id = c("Subject_id", "block", "color"))
   colnames(subject_rt_means3)[4] <- "light_level"
